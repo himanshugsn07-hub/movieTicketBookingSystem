@@ -14,6 +14,6 @@ public class UpiPayment implements PaymentStrategy {
     // Charges the booking amount via UPI and returns the payment.
     @Override
     public Payment pay(Booking booking) {
-        return new Payment(UUID.randomUUID().toString(), booking, PaymentType.UPI, booking.getAmount(), PaymentStatus.SUCCESS);
+        return new Payment(UUID.randomUUID().toString(), booking, PaymentType.UPI, booking.getPayableAmount(), PaymentStatus.SUCCESS);
     }
 }

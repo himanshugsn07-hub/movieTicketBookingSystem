@@ -63,7 +63,7 @@ public class BookingController {
     public BookingResponse confirmBooking(@AuthenticationPrincipal AppUserDetails user,
                                           @PathVariable String confirmationId,
                                           @Valid @RequestBody ConfirmBookingRequest request) {
-        return BookingResponse.from(bookingService.confirmBooking(user.getId(), confirmationId, request.paymentType()));
+        return BookingResponse.from(bookingService.confirmBooking(user.getId(), confirmationId, request.paymentType(), request.discountCode()));
     }
 
     // Cancels the user's confirmed booking and refunds per policy.

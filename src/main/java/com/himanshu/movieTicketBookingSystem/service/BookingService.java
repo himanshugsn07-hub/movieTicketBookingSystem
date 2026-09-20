@@ -1,6 +1,7 @@
 package com.himanshu.movieTicketBookingSystem.service;
 
 import com.himanshu.movieTicketBookingSystem.entity.Booking;
+import com.himanshu.movieTicketBookingSystem.entity.DiscountCode;
 import com.himanshu.movieTicketBookingSystem.entity.Payment;
 import com.himanshu.movieTicketBookingSystem.entity.Show;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
@@ -15,6 +16,7 @@ import com.himanshu.movieTicketBookingSystem.entity.Movie;
 import com.himanshu.movieTicketBookingSystem.entity.Seat;
 import com.himanshu.movieTicketBookingSystem.enums.PaymentType;
 import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
+import com.himanshu.movieTicketBookingSystem.repository.DiscountCodeRepository;
 import com.himanshu.movieTicketBookingSystem.repository.MovieRepository;
 import com.himanshu.movieTicketBookingSystem.repository.SeatRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ShowRepository;
@@ -46,6 +48,9 @@ public class BookingService {
 
     @Autowired
     private ShowRepository showRepo;
+
+    @Autowired
+    private DiscountCodeRepository discountCodeRepo;
 
     @Autowired
     private SeatRepository seatRepo;
@@ -141,7 +146,7 @@ public class BookingService {
 
     // Pays for a CREATED booking owned by the user and confirms it, or marks payment failed.
     @Transactional
-    public Booking confirmBooking(int userId, String confirmationId, PaymentType paymentType) {
+    public Booking confirmBooking(int userId, String confirmationId, PaymentType paymentType, String discountCode) {
         Booking booking = findOwnedBooking(userId, confirmationId);
         if (booking.getBookingStatus() != BookingStatus.CREATED) {
             throw new InvalidStateException("Booking is " + booking.getBookingStatus() + ", not CREATED");
@@ -149,12 +154,25 @@ public class BookingService {
         if (LocalDateTime.now().isAfter(booking.getExpiresAt())) {
             throw new InvalidStateException("Booking hold has expired");
         }
+        DiscountCode discount = null;
+        if (discountCode != null && !discountCode.isBlank()) {
+            discount = discountCodeRepo.findByCodeForUpdate(discountCode.trim().toUpperCase())
+                    .orElseThrow(() -> new ValidationException("Invalid discount code"));
+            if (!discount.isRedeemable(LocalDateTime.now())) {
+                throw new ValidationException("Discount code is inactive, expired or fully used");
+            }
+            booking.applyDiscount(discount.getCode(), discount.calculateDiscount(booking.getAmount()));
+        }
         Payment payment = paymentStrategyFactory.forPayment(paymentType).pay(booking);
         if (payment.getStatus() == PaymentStatus.FAILED) {
             booking.markPaymentFailed();
+            booking.clearDiscount();
             booking.getSeats().forEach(Seat::release);
         } else {
             booking.confirm(payment);
+            if (discount != null) {
+                discount.recordUse();
+            }
             booking.getSeats().forEach(Seat::book);
         }
         seatRepo.saveAll(booking.getSeats());

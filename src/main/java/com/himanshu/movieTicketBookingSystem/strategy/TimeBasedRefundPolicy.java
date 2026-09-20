@@ -16,6 +16,6 @@ public class TimeBasedRefundPolicy implements RefundPolicy {
     @Override
     public BigDecimal calculateRefund(Booking booking, LocalDateTime now) {
         LocalDateTime cutoff = booking.getShow().getStartTime().minus(fullRefundWindow);
-        return now.isAfter(cutoff) ? BigDecimal.ZERO : booking.getAmount();
+        return now.isAfter(cutoff) ? BigDecimal.ZERO : booking.getPayableAmount();
     }
 }

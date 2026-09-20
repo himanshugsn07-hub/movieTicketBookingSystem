@@ -22,7 +22,7 @@ public final class BookingDtos {
     public record CreateBookingRequest(@NotNull Integer showId, @NotEmpty List<@NotNull Integer> seatIds) {
     }
 
-    public record ConfirmBookingRequest(@NotNull PaymentType paymentType) {
+    public record ConfirmBookingRequest(@NotNull PaymentType paymentType, String discountCode) {
     }
 
     public record CancelResponse(boolean cancelled) {
@@ -42,13 +42,14 @@ public final class BookingDtos {
 
     public record BookingResponse(String confirmationId, int showId, String movieTitle, LocalDateTime showStartTime,
                                   List<Integer> seatIds, BookingStatus status,
-                                  BigDecimal amount, BigDecimal refundAmount, LocalDateTime createdAt,
+                                  BigDecimal amount, String discountCode, BigDecimal discountAmount,
+                                  BigDecimal payableAmount, BigDecimal refundAmount, LocalDateTime createdAt,
                                   LocalDateTime expiresAt, PaymentStatus paymentStatus) {
         public static BookingResponse from(Booking b) {
             return new BookingResponse(b.getConfirmationId(), b.getShow().getId(),
                     b.getShow().getMovie().getTitle(), b.getShow().getStartTime(),
                     b.getSeats().stream().map(Seat::getId).toList(), b.getBookingStatus(), b.getAmount(),
-                    b.getRefundAmount(), b.getCreatedAt(), b.getExpiresAt(),
+                    b.getDiscountCode(), b.getDiscountAmount(), b.getPayableAmount(), b.getRefundAmount(), b.getCreatedAt(), b.getExpiresAt(),
                     b.getPayment() == null ? null : b.getPayment().getStatus());
         }
     }

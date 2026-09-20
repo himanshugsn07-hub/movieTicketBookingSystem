@@ -1,9 +1,11 @@
 package com.himanshu.movieTicketBookingSystem.dto;
 
 import com.himanshu.movieTicketBookingSystem.entity.City;
+import com.himanshu.movieTicketBookingSystem.entity.DiscountCode;
 import com.himanshu.movieTicketBookingSystem.entity.Screen;
 import com.himanshu.movieTicketBookingSystem.entity.Show;
 import com.himanshu.movieTicketBookingSystem.entity.Theatre;
+import com.himanshu.movieTicketBookingSystem.enums.DiscountType;
 import com.himanshu.movieTicketBookingSystem.enums.PricingTier;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;
@@ -18,6 +20,21 @@ import java.time.LocalDateTime;
 public final class AdminDtos {
 
     private AdminDtos() {
+    }
+
+    public record DiscountCodeRequest(@NotBlank String code, @NotNull DiscountType type,
+                                      @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal value,
+                                      @NotNull LocalDateTime validFrom, @NotNull LocalDateTime validTo,
+                                      @Min(1) Integer maxUses, Boolean active) {
+    }
+
+    public record DiscountCodeResponse(int id, String code, DiscountType type, BigDecimal value,
+                                       LocalDateTime validFrom, LocalDateTime validTo, Integer maxUses,
+                                       int usedCount, boolean active) {
+        public static DiscountCodeResponse from(DiscountCode d) {
+            return new DiscountCodeResponse(d.getId(), d.getCode(), d.getType(), d.getValue(), d.getValidFrom(),
+                    d.getValidTo(), d.getMaxUses(), d.getUsedCount(), d.isActive());
+        }
     }
 
     public record CityRequest(@NotBlank String name) {

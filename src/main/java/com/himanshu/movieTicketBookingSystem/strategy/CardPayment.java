@@ -14,6 +14,6 @@ public class CardPayment implements PaymentStrategy {
     // Charges the booking amount via card and returns the payment.
     @Override
     public Payment pay(Booking booking) {
-        return new Payment(UUID.randomUUID().toString(), booking, PaymentType.CARD, booking.getAmount(), PaymentStatus.SUCCESS);
+        return new Payment(UUID.randomUUID().toString(), booking, PaymentType.CARD, booking.getPayableAmount(), PaymentStatus.SUCCESS);
     }
 }

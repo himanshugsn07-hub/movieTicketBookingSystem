@@ -27,6 +27,9 @@ public class Booking {
 
     private BigDecimal amount;
     private BigDecimal refundAmount;
+
+    private String discountCode;
+    private BigDecimal discountAmount = BigDecimal.ZERO;
     private LocalDateTime expiresAt;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -45,6 +48,34 @@ public class Booking {
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
         this.bookingStatus = BookingStatus.CREATED;
+    }
+
+    // Returns the discount code used, or null.
+    public String getDiscountCode() {
+        return discountCode;
+    }
+
+    // Returns the discount applied to the amount (zero if none).
+    public BigDecimal getDiscountAmount() {
+        return discountAmount == null ? BigDecimal.ZERO : discountAmount;
+    }
+
+    // Returns the amount to pay: the price minus any discount.
+    public BigDecimal getPayableAmount() {
+        return amount.subtract(getDiscountAmount());
+    }
+
+    // Applies a discount to a CREATED booking.
+    public void applyDiscount(String code, BigDecimal discountAmount) {
+        requireStatus(BookingStatus.CREATED);
+        this.discountCode = code;
+        this.discountAmount = discountAmount;
+    }
+
+    // Removes any applied discount.
+    public void clearDiscount() {
+        this.discountCode = null;
+        this.discountAmount = BigDecimal.ZERO;
     }
 
     // Returns the refund amount, or null if not cancelled.
