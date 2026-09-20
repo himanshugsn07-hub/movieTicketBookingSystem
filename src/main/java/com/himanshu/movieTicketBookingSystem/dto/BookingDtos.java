@@ -28,6 +28,9 @@ public final class BookingDtos {
     public record CancelResponse(boolean cancelled) {
     }
 
+    public record RefundPreviewResponse(BigDecimal refundAmount, String policyName) {
+    }
+
     public record MovieResponse(String id, String title, String language, int durationMin, String genre) {
         public static MovieResponse from(Movie m) {
             return new MovieResponse(m.getId(), m.getTitle(), m.getLanguage(), m.getDurationMin(), m.getGenre());
@@ -43,13 +46,13 @@ public final class BookingDtos {
     public record BookingResponse(String confirmationId, int showId, String movieTitle, LocalDateTime showStartTime,
                                   List<Integer> seatIds, BookingStatus status,
                                   BigDecimal amount, String discountCode, BigDecimal discountAmount,
-                                  BigDecimal payableAmount, BigDecimal refundAmount, LocalDateTime createdAt,
+                                  BigDecimal payableAmount, String refundPolicyName, BigDecimal refundAmount, LocalDateTime createdAt,
                                   LocalDateTime expiresAt, PaymentStatus paymentStatus) {
         public static BookingResponse from(Booking b) {
             return new BookingResponse(b.getConfirmationId(), b.getShow().getId(),
                     b.getShow().getMovie().getTitle(), b.getShow().getStartTime(),
                     b.getSeats().stream().map(Seat::getId).toList(), b.getBookingStatus(), b.getAmount(),
-                    b.getDiscountCode(), b.getDiscountAmount(), b.getPayableAmount(), b.getRefundAmount(), b.getCreatedAt(), b.getExpiresAt(),
+                    b.getDiscountCode(), b.getDiscountAmount(), b.getPayableAmount(), b.getRefundPolicyName(), b.getRefundAmount(), b.getCreatedAt(), b.getExpiresAt(),
                     b.getPayment() == null ? null : b.getPayment().getStatus());
         }
     }

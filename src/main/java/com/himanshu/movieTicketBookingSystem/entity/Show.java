@@ -28,6 +28,10 @@ public class Show {
     private PricingTier pricingTier;
 
     private boolean cancelled;
+
+    // null means the default refund policy applies
+    @ManyToOne
+    private RefundPolicyConfig refundPolicy;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -88,6 +92,16 @@ public class Show {
     // Returns the movie being shown.
     public Movie getMovie() {
         return movie;
+    }
+
+    // Returns the show's own refund policy, or null to use the default.
+    public RefundPolicyConfig getRefundPolicy() {
+        return refundPolicy;
+    }
+
+    // Assigns a refund policy to the show, or null to use the default.
+    public void assignRefundPolicy(RefundPolicyConfig refundPolicy) {
+        this.refundPolicy = refundPolicy;
     }
 
     // Returns the show's end time.

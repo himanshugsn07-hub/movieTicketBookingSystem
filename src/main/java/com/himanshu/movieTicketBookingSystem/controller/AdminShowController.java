@@ -29,6 +29,12 @@ public class AdminShowController {
         return showService.listShows(screenId).stream().map(ShowResponse::from).toList();
     }
 
+    // Assigns a refund policy to a show, or clears it to use the default.
+    @PutMapping("/{id}/refund-policy")
+    public ShowResponse assignRefundPolicy(@PathVariable int id, @RequestBody ShowRefundPolicyRequest r) {
+        return ShowResponse.from(showService.assignRefundPolicy(id, r.refundPolicyId()));
+    }
+
     // Changes a show's base price and pricing tier.
     @PutMapping("/{id}/pricing")
     public ShowResponse updatePricing(@PathVariable int id, @Valid @RequestBody PricingRequest r) {

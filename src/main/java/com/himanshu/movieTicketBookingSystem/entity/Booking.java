@@ -28,6 +28,10 @@ public class Booking {
     private BigDecimal amount;
     private BigDecimal refundAmount;
 
+    // Refund policy captured when the booking was created, so later policy edits do not affect it.
+    private String refundPolicyName;
+    private String refundTiers;
+
     private String discountCode;
     private BigDecimal discountAmount = BigDecimal.ZERO;
     private LocalDateTime expiresAt;
@@ -39,7 +43,7 @@ public class Booking {
     }
 
     public Booking(String confirmationId, int userId, Show show, List<Seat> seats, BigDecimal amount,
-                   LocalDateTime createdAt, LocalDateTime expiresAt) {
+                   LocalDateTime createdAt, LocalDateTime expiresAt, RefundPolicyConfig refundPolicy) {
         this.confirmationId = confirmationId;
         this.userId = userId;
         this.show = show;
@@ -48,6 +52,18 @@ public class Booking {
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
         this.bookingStatus = BookingStatus.CREATED;
+        this.refundPolicyName = refundPolicy.getName();
+        this.refundTiers = refundPolicy.toSnapshot();
+    }
+
+    // Returns the name of the refund policy snapshotted on this booking.
+    public String getRefundPolicyName() {
+        return refundPolicyName;
+    }
+
+    // Returns the snapshotted refund tiers such as "24:100,0:0", or null for bookings that predate policies.
+    public String getRefundTiers() {
+        return refundTiers;
     }
 
     // Returns the discount code used, or null.

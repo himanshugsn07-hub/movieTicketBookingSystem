@@ -3,6 +3,7 @@ package com.himanshu.movieTicketBookingSystem.controller;
 import com.himanshu.movieTicketBookingSystem.dto.BookingDtos.*;
 import com.himanshu.movieTicketBookingSystem.security.AppUserDetails;
 import com.himanshu.movieTicketBookingSystem.service.BookingService;
+import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -64,6 +65,15 @@ public class BookingController {
                                           @PathVariable String confirmationId,
                                           @Valid @RequestBody ConfirmBookingRequest request) {
         return BookingResponse.from(bookingService.confirmBooking(user.getId(), confirmationId, request.paymentType(), request.discountCode()));
+    }
+
+    // Shows the refund the user would get by cancelling their confirmed booking right now.
+    @GetMapping("/bookings/{confirmationId}/refund-preview")
+    public RefundPreviewResponse refundPreview(@AuthenticationPrincipal AppUserDetails user,
+                                               @PathVariable String confirmationId) {
+        Booking booking = bookingService.getBooking(user.getId(), confirmationId);
+        return new RefundPreviewResponse(bookingService.previewRefund(user.getId(), confirmationId),
+                booking.getRefundPolicyName());
     }
 
     // Cancels the user's confirmed booking and refunds per policy.

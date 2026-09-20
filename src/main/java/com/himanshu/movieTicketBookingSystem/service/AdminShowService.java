@@ -9,6 +9,7 @@ import com.himanshu.movieTicketBookingSystem.exception.InvalidStateException;
 import com.himanshu.movieTicketBookingSystem.exception.NotFoundException;
 import com.himanshu.movieTicketBookingSystem.exception.ValidationException;
 import com.himanshu.movieTicketBookingSystem.repository.MovieRepository;
+import com.himanshu.movieTicketBookingSystem.repository.RefundPolicyConfigRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ScreenRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ShowRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class AdminShowService {
     @Autowired
     private MovieRepository movieRepo;
 
+    @Autowired
+    private RefundPolicyConfigRepository refundPolicyRepo;
+
     // Schedules a show on a screen (locked to serialize scheduling) and generates its seats from the screen layout.
     public Show createShow(int screenId, String movieId, BigDecimal basePrice, PricingTier pricingTier,
                            LocalDateTime startTime) {
@@ -49,6 +53,18 @@ public class AdminShowService {
         Show show = new Show(screen, movie, basePrice, pricingTier, startTime, endTime);
         show.generateSeats(screen.getRows(), screen.getColumns());
         return showRepo.save(show);
+    }
+
+    // Assigns a refund policy to a show that has not started, or clears it (null) to use the default policy.
+    public Show assignRefundPolicy(int showId, Integer refundPolicyId) {
+        Show show = showRepo.findById(showId)
+                .orElseThrow(() -> new NotFoundException("Show " + showId + " not found"));
+        if (show.isCancelled() || show.hasStarted()) {
+            throw new InvalidStateException("Cannot change the refund policy of a cancelled or started show");
+        }
+        show.assignRefundPolicy(refundPolicyId == null ? null : refundPolicyRepo.findById(refundPolicyId)
+                .orElseThrow(() -> new NotFoundException("Refund policy " + refundPolicyId + " not found")));
+        return show;
     }
 
     // Lists shows, optionally filtered by screen.

@@ -3,6 +3,7 @@ package com.himanshu.movieTicketBookingSystem.service;
 import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.entity.DiscountCode;
 import com.himanshu.movieTicketBookingSystem.entity.Payment;
+import com.himanshu.movieTicketBookingSystem.entity.RefundPolicyConfig;
 import com.himanshu.movieTicketBookingSystem.entity.Show;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import com.himanshu.movieTicketBookingSystem.enums.PaymentStatus;
@@ -18,6 +19,7 @@ import com.himanshu.movieTicketBookingSystem.enums.PaymentType;
 import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
 import com.himanshu.movieTicketBookingSystem.repository.DiscountCodeRepository;
 import com.himanshu.movieTicketBookingSystem.repository.MovieRepository;
+import com.himanshu.movieTicketBookingSystem.repository.RefundPolicyConfigRepository;
 import com.himanshu.movieTicketBookingSystem.repository.SeatRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ShowRepository;
 import com.himanshu.movieTicketBookingSystem.strategy.PaymentStrategyFactory;
@@ -53,6 +55,9 @@ public class BookingService {
     private DiscountCodeRepository discountCodeRepo;
 
     @Autowired
+    private RefundPolicyConfigRepository refundPolicyRepo;
+
+    @Autowired
     private SeatRepository seatRepo;
 
     @Autowired
@@ -63,6 +68,16 @@ public class BookingService {
 
     @Autowired
     private RefundPolicy refundPolicy;
+
+    // Returns the refund the user would get if they cancelled their CONFIRMED booking right now.
+    @Transactional(readOnly = true)
+    public BigDecimal previewRefund(int userId, String confirmationId) {
+        Booking booking = getBooking(userId, confirmationId);
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw new InvalidStateException("Only CONFIRMED bookings can be cancelled");
+        }
+        return refundPolicy.calculateRefund(booking, LocalDateTime.now());
+    }
 
     // Returns the user's bookings, newest first, optionally filtered by status.
     @Transactional(readOnly = true)
@@ -127,6 +142,10 @@ public class BookingService {
         if (show.hasStarted()) {
             throw new InvalidStateException("Show has already started");
         }
+        RefundPolicyConfig refundPolicy = show.getRefundPolicy() != null
+                ? show.getRefundPolicy()
+                : refundPolicyRepo.findByDefaultPolicyTrue()
+                        .orElseThrow(() -> new InvalidStateException("No refund policy is configured"));
         List<Seat> seats = seatRepo.findByShowIdAndIdIn(showId, seatIds);
         if (seats.size() != seatIds.size()) {
             throw new NotFoundException("One or more seats not found for show " + showId);
@@ -139,7 +158,7 @@ public class BookingService {
         BigDecimal amount = pricingStrategyFactory.forTier(show.getPricingTier()).calculatePrice(show, seats);
         LocalDateTime now = LocalDateTime.now();
         Booking booking = new Booking(UUID.randomUUID().toString(), userId, show, seats, amount,
-                now, now.plus(HOLD_DURATION));
+                now, now.plus(HOLD_DURATION), refundPolicy);
         seatRepo.saveAll(seats);
         return bookingRepo.save(booking);
     }
