@@ -13,4 +13,26 @@ public class City {
 
     @OneToMany(mappedBy = "city")
     private List<Theatre> theatres;
+
+    protected City() {
+    }
+
+    public City(String name) {
+        this.name = name;
+    }
+
+    // Returns the city id.
+    public int getId() {
+        return id;
+    }
+
+    // Returns the city name.
+    public String getName() {
+        return name;
+    }
+
+    // Changes the city name.
+    public void rename(String name) {
+        this.name = name;
+    }
 }

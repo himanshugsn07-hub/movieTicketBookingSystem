@@ -13,8 +13,29 @@ public class Seat {
     @JoinColumn(name = "show_id")
     private Show show;
 
+    private String label;
+
     @Enumerated(EnumType.STRING)
     private SeatStatus status;
+
+    protected Seat() {
+    }
+
+    public Seat(Show show, String label) {
+        this.show = show;
+        this.label = label;
+        this.status = SeatStatus.AVAILABLE;
+    }
+
+    // Returns the seat label such as A1.
+    public String getLabel() {
+        return label;
+    }
+
+    // Returns the seat status.
+    public SeatStatus getStatus() {
+        return status;
+    }
 
     // Returns the seat id.
     public int getId() {

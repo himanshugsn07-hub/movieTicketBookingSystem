@@ -17,7 +17,7 @@ public class Booking {
     @ManyToOne
     private Show show;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Seat> seats;
 
     private LocalDateTime createdAt;
@@ -45,6 +45,16 @@ public class Booking {
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
         this.bookingStatus = BookingStatus.CREATED;
+    }
+
+    // Returns the refund amount, or null if not cancelled.
+    public BigDecimal getRefundAmount() {
+        return refundAmount;
+    }
+
+    // Returns when the booking was created.
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     // Returns the booking's confirmation id.
