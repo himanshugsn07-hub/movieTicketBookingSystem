@@ -32,6 +32,41 @@ public class Booking {
     @OneToOne(cascade = CascadeType.ALL)
     private Payment payment;
 
+    protected Booking() {
+    }
+
+    public Booking(String confirmationId, int userId, Show show, List<Seat> seats, BigDecimal amount,
+                   LocalDateTime createdAt, LocalDateTime expiresAt) {
+        this.confirmationId = confirmationId;
+        this.userId = userId;
+        this.show = show;
+        this.seats = seats;
+        this.amount = amount;
+        this.createdAt = createdAt;
+        this.expiresAt = expiresAt;
+        this.bookingStatus = BookingStatus.CREATED;
+    }
+
+    // Returns the id of the user who owns this booking.
+    public int getUserId() {
+        return userId;
+    }
+
+    // Returns the seats held by this booking.
+    public List<Seat> getSeats() {
+        return seats;
+    }
+
+    // Returns the time the hold on the seats ends.
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    // Returns the payment attached to this booking, or null before confirmation.
+    public Payment getPayment() {
+        return payment;
+    }
+
     // Returns the booking amount.
     public BigDecimal getAmount() {
         return amount;

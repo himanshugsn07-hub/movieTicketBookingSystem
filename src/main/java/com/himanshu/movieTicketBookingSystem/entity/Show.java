@@ -35,6 +35,11 @@ public class Show {
         return basePrice;
     }
 
+    // Returns the show's pricing tier.
+    public PricingTier getPricingTier() {
+        return pricingTier;
+    }
+
     // Returns the show's start time.
     public LocalDateTime getStartTime() {
         return startTime;

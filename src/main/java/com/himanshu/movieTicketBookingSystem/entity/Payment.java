@@ -32,6 +32,11 @@ public class Payment {
         this.status = status;
     }
 
+    // Returns the payment status.
+    public PaymentStatus getStatus() {
+        return status;
+    }
+
     // Sets the payment status to REFUNDED.
     public void markRefunded() {
         status = PaymentStatus.REFUNDED;
