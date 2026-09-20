@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Only track project files (src, pom.xml) ###
+.gitattributes
+.mvn/
+mvnw
+mvnw.cmd
+HELP.md
