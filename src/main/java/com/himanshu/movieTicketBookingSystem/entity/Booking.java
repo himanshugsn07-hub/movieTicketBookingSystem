@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(indexes = @Index(name = "idx_booking_status_expires", columnList = "booking_status, expires_at"))
 public class Booking {
     @Id
     private String confirmationId;

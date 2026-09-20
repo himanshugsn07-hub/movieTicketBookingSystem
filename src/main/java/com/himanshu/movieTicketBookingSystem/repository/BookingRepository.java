@@ -22,6 +22,14 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     @Query("select b from Booking b where b.bookingStatus = com.himanshu.movieTicketBookingSystem.enums.BookingStatus.CREATED and b.expiresAt < :now order by b.expiresAt, b.confirmationId")
     List<Booking> findExpiredBookings(@Param("now") LocalDateTime now);
 
+    // Finds ids of CREATED bookings whose hold ended before the given time, oldest first (ids only, no seats loaded).
+    @Query("select b.confirmationId from Booking b where b.bookingStatus = com.himanshu.movieTicketBookingSystem.enums.BookingStatus.CREATED and b.expiresAt < :now order by b.expiresAt, b.confirmationId")
+    List<String> findExpiredBookingIds(@Param("now") LocalDateTime now);
+
+    // Same as findExpiredBookingIds but only for one show.
+    @Query("select b.confirmationId from Booking b where b.bookingStatus = com.himanshu.movieTicketBookingSystem.enums.BookingStatus.CREATED and b.expiresAt < :now and b.show.id = :showId order by b.expiresAt, b.confirmationId")
+    List<String> findExpiredBookingIdsByShowId(@Param("now") LocalDateTime now, @Param("showId") int showId);
+
     // Finds the user's bookings, newest first.
     List<Booking> findByUserIdOrderByCreatedAtDesc(int userId, Pageable pageable);
 

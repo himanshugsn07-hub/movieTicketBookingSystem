@@ -1,6 +1,5 @@
 package com.himanshu.movieTicketBookingSystem.service;
 
-import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.entity.Seat;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
@@ -33,10 +32,17 @@ public class BookingExpiryService {
     // Expires CREATED bookings past their hold time and releases their seats; runs every 30 seconds.
     @Scheduled(fixedDelay = 30_000)
     public void releaseExpiredBookings() {
+        expireAll(bookingRepo.findExpiredBookingIds(LocalDateTime.now()));
+    }
+
+    // Same as the scheduled sweep but only for one show; run before a booking is created so lapsed holds free their seats at once.
+    public void releaseExpiredBookings(int showId) {
+        expireAll(bookingRepo.findExpiredBookingIdsByShowId(LocalDateTime.now(), showId));
+    }
+
+    // Expires each booking in its own transaction so one failure does not stop the others.
+    private void expireAll(List<String> ids) {
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        List<String> ids = bookingRepo.findExpiredBookings(LocalDateTime.now()).stream()
-                .map(Booking::getConfirmationId)
-                .toList();
         for (String id : ids) {
             try {
                 tx.executeWithoutResult(status -> expire(id));
@@ -56,6 +62,7 @@ public class BookingExpiryService {
                     b.getSeats().forEach(Seat::release);
                     seatRepo.saveAll(b.getSeats());
                     bookingRepo.save(b);
+                    log.info("Expired booking {} and released {} seat(s)", b.getConfirmationId(), b.getSeats().size());
                 });
     }
 }

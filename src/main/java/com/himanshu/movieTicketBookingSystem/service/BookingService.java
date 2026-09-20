@@ -25,11 +25,15 @@ import com.himanshu.movieTicketBookingSystem.repository.ShowRepository;
 import com.himanshu.movieTicketBookingSystem.strategy.PaymentStrategyFactory;
 import com.himanshu.movieTicketBookingSystem.strategy.PricingStrategyFactory;
 import com.himanshu.movieTicketBookingSystem.strategy.RefundPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -40,6 +44,8 @@ import java.util.UUID;
 
 @Service
 public class BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     private static final Duration HOLD_DURATION = Duration.ofMinutes(5);
 
@@ -60,6 +66,12 @@ public class BookingService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private BookingExpiryService bookingExpiryService;
+
+    @Autowired
+    private PlatformTransactionManager txManager;
 
     @Autowired
     private SeatRepository seatRepo;
@@ -135,13 +147,23 @@ public class BookingService {
         return seatRepo.findByShowIdAndStatus(showId, SeatStatus.AVAILABLE);
     }
 
-    // Reserves the seats, prices the booking and creates it in CREATED status with a hold expiry.
-    @Transactional
+    // Frees lapsed holds on the show, then reserves the seats, prices the booking and creates it in CREATED status with a hold expiry.
     public Booking createBooking(int userId, int showId, List<Integer> seatIds) {
         if (seatIds == null || seatIds.isEmpty() || seatIds.stream().anyMatch(Objects::isNull)
                 || seatIds.stream().distinct().count() != seatIds.size()) {
             throw new ValidationException("Seat ids must be non-empty, non-null and unique");
         }
+        // Runs before the booking transaction opens, so the sweep never needs a second connection while holding one.
+        try {
+            bookingExpiryService.releaseExpiredBookings(showId);
+        } catch (RuntimeException e) {
+            log.warn("Could not release expired holds for show {} before booking", showId, e);
+        }
+        return new TransactionTemplate(txManager).execute(status -> reserveAndCreate(userId, showId, seatIds));
+    }
+
+    // Reserves the seats under row locks and saves the CREATED booking; runs inside one transaction.
+    private Booking reserveAndCreate(int userId, int showId, List<Integer> seatIds) {
         Show show = showRepo.findByIdForShare(showId)
                 .orElseThrow(() -> new NotFoundException("Show " + showId + " not found"));
         if (show.isCancelled()) {
