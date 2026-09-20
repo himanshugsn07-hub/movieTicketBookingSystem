@@ -35,6 +35,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -97,7 +98,7 @@ public class BookingService {
         Booking booking = bookingRepo.findById(confirmationId)
                 .orElseThrow(() -> new NotFoundException("Booking " + confirmationId + " not found"));
         if (booking.getUserId() != userId) {
-            throw new UnauthorizedException("Booking does not belong to user " + userId);
+            throw new UnauthorizedException("Booking does not belong to the current user");
         }
         return booking;
     }
@@ -113,7 +114,7 @@ public class BookingService {
         Booking booking = bookingRepo.findByIdForUpdate(confirmationId)
                 .orElseThrow(() -> new NotFoundException("Booking " + confirmationId + " not found"));
         if (booking.getUserId() != userId) {
-            throw new UnauthorizedException("Booking does not belong to user " + userId);
+            throw new UnauthorizedException("Booking does not belong to the current user");
         }
         return booking;
     }
@@ -137,8 +138,9 @@ public class BookingService {
     // Reserves the seats, prices the booking and creates it in CREATED status with a hold expiry.
     @Transactional
     public Booking createBooking(int userId, int showId, List<Integer> seatIds) {
-        if (seatIds == null || seatIds.isEmpty() || seatIds.stream().distinct().count() != seatIds.size()) {
-            throw new ValidationException("Seat ids must be non-empty and unique");
+        if (seatIds == null || seatIds.isEmpty() || seatIds.stream().anyMatch(Objects::isNull)
+                || seatIds.stream().distinct().count() != seatIds.size()) {
+            throw new ValidationException("Seat ids must be non-empty, non-null and unique");
         }
         Show show = showRepo.findByIdForShare(showId)
                 .orElseThrow(() -> new NotFoundException("Show " + showId + " not found"));
@@ -178,6 +180,10 @@ public class BookingService {
         }
         if (LocalDateTime.now().isAfter(booking.getExpiresAt())) {
             throw new InvalidStateException("Booking hold has expired");
+        }
+        Show show = booking.getShow();
+        if (show.isCancelled() || show.hasStarted()) {
+            throw new InvalidStateException("Show has been cancelled or has already started");
         }
         DiscountCode discount = null;
         if (discountCode != null && !discountCode.isBlank()) {
