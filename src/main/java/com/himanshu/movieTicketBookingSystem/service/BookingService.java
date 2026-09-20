@@ -58,6 +58,9 @@ public class BookingService {
     private RefundPolicyConfigRepository refundPolicyRepo;
 
     @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
     private SeatRepository seatRepo;
 
     @Autowired
@@ -190,12 +193,14 @@ public class BookingService {
             booking.markPaymentFailed();
             booking.clearDiscount();
             booking.getSeats().forEach(Seat::release);
+            notificationService.paymentFailed(booking);
         } else {
             booking.confirm(payment);
             if (discount != null) {
                 discount.recordUse();
             }
             booking.getSeats().forEach(Seat::book);
+            notificationService.bookingConfirmed(booking);
         }
         seatRepo.saveAll(booking.getSeats());
         return bookingRepo.save(booking);
@@ -214,6 +219,7 @@ public class BookingService {
         if (refund.signum() > 0) {
             booking.getPayment().markRefunded();
         }
+        notificationService.bookingCancelled(booking, refund);
         seatRepo.saveAll(booking.getSeats());
         bookingRepo.save(booking);
         return true;

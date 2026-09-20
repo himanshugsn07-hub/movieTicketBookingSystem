@@ -38,6 +38,9 @@ public class AdminShowService {
     private BookingRepository bookingRepo;
 
     @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
     private MovieRepository movieRepo;
 
     @Autowired
@@ -105,9 +108,11 @@ public class AdminShowService {
                 }
                 refunded++;
                 totalRefunded = totalRefunded.add(refund);
+                notificationService.showCancelled(booking, refund);
             } else if (booking.getBookingStatus() == BookingStatus.CREATED) {
                 booking.expire();
                 expired++;
+                notificationService.showCancelled(booking, BigDecimal.ZERO);
             } else {
                 continue;
             }
