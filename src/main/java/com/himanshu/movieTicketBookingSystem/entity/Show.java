@@ -32,16 +32,16 @@ public class Show {
 
     // Returns true if the show's start time has passed.
     public boolean hasStarted() {
-        throw new UnsupportedOperationException("TODO");
+        return !LocalDateTime.now().isBefore(startTime);
     }
 
     // Returns true if the show has been cancelled.
     public boolean isCancelled() {
-        throw new UnsupportedOperationException("TODO");
+        return cancelled;
     }
 
     // Returns the seats of this show whose status is AVAILABLE.
     public List<Seat> getAvailableSeats() {
-        throw new UnsupportedOperationException("TODO");
+        return seats.stream().filter(Seat::isAvailable).toList();
     }
 }

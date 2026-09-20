@@ -23,5 +23,6 @@ public class Payment {
 
     // Sets the payment status to REFUNDED.
     public void markRefunded() {
+        status = PaymentStatus.REFUNDED;
     }
 }

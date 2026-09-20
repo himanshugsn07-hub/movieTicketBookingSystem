@@ -18,24 +18,30 @@ public class Seat {
 
     // Returns the seat id.
     public int getId() {
-        throw new UnsupportedOperationException("TODO");
+        return id;
     }
 
     // Returns true if the seat status is AVAILABLE.
     public boolean isAvailable() {
-        throw new UnsupportedOperationException("TODO");
+        return status == SeatStatus.AVAILABLE;
     }
 
     // Moves the seat from AVAILABLE to RESERVED; returns false if it was not available.
     public boolean reserve() {
-        throw new UnsupportedOperationException("TODO");
+        if (!isAvailable()) {
+            return false;
+        }
+        status = SeatStatus.RESERVED;
+        return true;
     }
 
     // Marks the seat as BOOKED.
     public void book() {
+        status = SeatStatus.BOOKED;
     }
 
     // Marks the seat as AVAILABLE again.
     public void release() {
+        status = SeatStatus.AVAILABLE;
     }
 }
