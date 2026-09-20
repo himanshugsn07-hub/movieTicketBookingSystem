@@ -94,6 +94,11 @@ public class Show {
         return movie;
     }
 
+    // Marks the show as cancelled so it accepts no new bookings.
+    public void cancel() {
+        this.cancelled = true;
+    }
+
     // Returns the show's own refund policy, or null to use the default.
     public RefundPolicyConfig getRefundPolicy() {
         return refundPolicy;

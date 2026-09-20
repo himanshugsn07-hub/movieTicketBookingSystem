@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,10 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
 
     // Finds the user's bookings with the given status, newest first.
     List<Booking> findByUserIdAndBookingStatusOrderByCreatedAtDesc(int userId, BookingStatus status, Pageable pageable);
+
+    // Finds the ids of the show's bookings that have one of the given statuses, in id order.
+    @Query("select b.confirmationId from Booking b where b.show.id = :showId and b.bookingStatus in :statuses order by b.confirmationId")
+    List<String> findIdsByShowIdAndStatuses(@Param("showId") int showId, @Param("statuses") Collection<BookingStatus> statuses);
 
     // Finds a booking by id under a pessimistic write lock so concurrent changes are serialized.
     @Lock(LockModeType.PESSIMISTIC_WRITE)

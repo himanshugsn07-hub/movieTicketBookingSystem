@@ -1,13 +1,17 @@
 package com.himanshu.movieTicketBookingSystem.service;
 
+import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.entity.Movie;
 import com.himanshu.movieTicketBookingSystem.entity.Screen;
+import com.himanshu.movieTicketBookingSystem.entity.Seat;
 import com.himanshu.movieTicketBookingSystem.entity.Show;
+import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import com.himanshu.movieTicketBookingSystem.enums.PricingTier;
 import com.himanshu.movieTicketBookingSystem.exception.ConflictException;
 import com.himanshu.movieTicketBookingSystem.exception.InvalidStateException;
 import com.himanshu.movieTicketBookingSystem.exception.NotFoundException;
 import com.himanshu.movieTicketBookingSystem.exception.ValidationException;
+import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
 import com.himanshu.movieTicketBookingSystem.repository.MovieRepository;
 import com.himanshu.movieTicketBookingSystem.repository.RefundPolicyConfigRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ScreenRepository;
@@ -29,6 +33,9 @@ public class AdminShowService {
 
     @Autowired
     private ScreenRepository screenRepo;
+
+    @Autowired
+    private BookingRepository bookingRepo;
 
     @Autowired
     private MovieRepository movieRepo;
@@ -65,6 +72,48 @@ public class AdminShowService {
         show.assignRefundPolicy(refundPolicyId == null ? null : refundPolicyRepo.findById(refundPolicyId)
                 .orElseThrow(() -> new NotFoundException("Refund policy " + refundPolicyId + " not found")));
         return show;
+    }
+
+    public record CancellationResult(int showId, int refundedBookings, int expiredBookings, BigDecimal totalRefunded) {
+    }
+
+    // Cancels a show that has not started: CONFIRMED bookings are cancelled with a full refund of what was paid
+    // (refund policy ignored), CREATED holds are expired, and all their seats are released, all in one transaction.
+    public CancellationResult cancelShow(int showId) {
+        Show show = showRepo.findByIdForUpdate(showId)
+                .orElseThrow(() -> new NotFoundException("Show " + showId + " not found"));
+        if (show.isCancelled()) {
+            throw new InvalidStateException("Show is already cancelled");
+        }
+        if (show.hasStarted()) {
+            throw new InvalidStateException("Cannot cancel a show that has already started");
+        }
+        show.cancel();
+        int refunded = 0;
+        int expired = 0;
+        BigDecimal totalRefunded = BigDecimal.ZERO;
+        for (String id : bookingRepo.findIdsByShowIdAndStatuses(showId, List.of(BookingStatus.CREATED, BookingStatus.CONFIRMED))) {
+            Booking booking = bookingRepo.findByIdForUpdate(id).orElse(null);
+            if (booking == null) {
+                continue;
+            }
+            if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
+                BigDecimal refund = booking.getPayableAmount();
+                booking.cancel(refund);
+                if (refund.signum() > 0) {
+                    booking.getPayment().markRefunded();
+                }
+                refunded++;
+                totalRefunded = totalRefunded.add(refund);
+            } else if (booking.getBookingStatus() == BookingStatus.CREATED) {
+                booking.expire();
+                expired++;
+            } else {
+                continue;
+            }
+            booking.getSeats().forEach(Seat::release);
+        }
+        return new CancellationResult(showId, refunded, expired, totalRefunded);
     }
 
     // Lists shows, optionally filtered by screen.

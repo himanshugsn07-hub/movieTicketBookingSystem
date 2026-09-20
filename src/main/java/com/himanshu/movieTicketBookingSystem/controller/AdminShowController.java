@@ -29,6 +29,13 @@ public class AdminShowController {
         return showService.listShows(screenId).stream().map(ShowResponse::from).toList();
     }
 
+    // Cancels a show: refunds confirmed bookings in full, expires held ones and frees the seats.
+    @PostMapping("/{id}/cancel")
+    public ShowCancellationResponse cancelShow(@PathVariable int id) {
+        AdminShowService.CancellationResult r = showService.cancelShow(id);
+        return new ShowCancellationResponse(r.showId(), r.refundedBookings(), r.expiredBookings(), r.totalRefunded());
+    }
+
     // Assigns a refund policy to a show, or clears it to use the default.
     @PutMapping("/{id}/refund-policy")
     public ShowResponse assignRefundPolicy(@PathVariable int id, @RequestBody ShowRefundPolicyRequest r) {

@@ -125,7 +125,9 @@ public class BookingService {
 
     // Returns the available seats for the given show.
     public List<Seat> getAvailableSeats(int showId) {
-        findShow(showId);
+        if (findShow(showId).isCancelled()) {
+            return List.of();
+        }
         return seatRepo.findByShowIdAndStatus(showId, SeatStatus.AVAILABLE);
     }
 
@@ -135,7 +137,8 @@ public class BookingService {
         if (seatIds == null || seatIds.isEmpty() || seatIds.stream().distinct().count() != seatIds.size()) {
             throw new ValidationException("Seat ids must be non-empty and unique");
         }
-        Show show = findShow(showId);
+        Show show = showRepo.findByIdForShare(showId)
+                .orElseThrow(() -> new NotFoundException("Show " + showId + " not found"));
         if (show.isCancelled()) {
             throw new InvalidStateException("Show is cancelled");
         }

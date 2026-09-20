@@ -59,6 +59,10 @@ public final class AdminDtos {
         }
     }
 
+    public record ShowCancellationResponse(int showId, int refundedBookings, int expiredBookings,
+                                           BigDecimal totalRefunded) {
+    }
+
     public record ShowRefundPolicyRequest(Integer refundPolicyId) {
     }
 
