@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.repository;
 
+import com.himanshu.movieTicketBookingSystem.constants.Queries;
 import com.himanshu.movieTicketBookingSystem.entity.Movie;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,6 @@ import java.util.List;
 public interface MovieRepository extends JpaRepository<Movie, String> {
 
     // Finds movies matching the title that are showing in the given city.
-    @Query("select distinct s.movie from Show s where lower(s.movie.title) like lower(concat('%', :title, '%')) and s.screen.theatre.city.id = :cityId")
+    @Query(Queries.Movie.BY_TITLE_IN_CITY)
     List<Movie> findByTitleInCity(@Param("title") String title, @Param("cityId") int cityId);
 }

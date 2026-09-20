@@ -11,9 +11,9 @@ import java.util.UUID;
 @Component
 public class UpiPayment implements PaymentStrategy {
 
-    // Charges the booking amount via UPI and returns the payment.
+    // Records a UPI payment of the booking's payable amount as successful.
     @Override
     public Payment pay(Booking booking) {
-        return new Payment(UUID.randomUUID().toString(), booking, PaymentType.UPI, booking.getPayableAmount(), PaymentStatus.SUCCESS);
+        return new Payment(UUID.randomUUID().toString(), PaymentType.UPI, booking.getPayableAmount(), PaymentStatus.SUCCESS);
     }
 }

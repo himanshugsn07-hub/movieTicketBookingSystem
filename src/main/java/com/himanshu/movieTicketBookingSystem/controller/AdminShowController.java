@@ -1,20 +1,23 @@
 package com.himanshu.movieTicketBookingSystem.controller;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.*;
 import com.himanshu.movieTicketBookingSystem.service.AdminShowService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/shows")
+@RequestMapping(Constants.Api.ADMIN + "/shows")
 public class AdminShowController {
 
-    @Autowired
-    private AdminShowService showService;
+    private final AdminShowService showService;
+
+    public AdminShowController(AdminShowService showService) {
+        this.showService = showService;
+    }
 
     // Schedules a show and generates its seats.
     @PostMapping

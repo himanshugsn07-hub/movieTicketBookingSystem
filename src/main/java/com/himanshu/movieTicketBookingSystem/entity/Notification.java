@@ -34,13 +34,14 @@ public class Notification {
     protected Notification() {
     }
 
-    public Notification(int userId, String bookingId, NotificationType type, String message, LocalDateTime sendAt) {
+    public Notification(int userId, String bookingId, NotificationType type, String message,
+                        LocalDateTime createdAt, LocalDateTime sendAt) {
         this.userId = userId;
         this.bookingId = bookingId;
         this.type = type;
         this.message = message;
         this.sendAt = sendAt;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = createdAt;
         this.status = NotificationStatus.PENDING;
     }
 

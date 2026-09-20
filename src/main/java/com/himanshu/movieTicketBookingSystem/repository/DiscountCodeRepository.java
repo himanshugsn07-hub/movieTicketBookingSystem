@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.repository;
 
+import com.himanshu.movieTicketBookingSystem.constants.Queries;
 import com.himanshu.movieTicketBookingSystem.entity.DiscountCode;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +19,6 @@ public interface DiscountCodeRepository extends JpaRepository<DiscountCode, Inte
 
     // Finds a code under a write lock so redemptions are counted without races.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select d from DiscountCode d where d.code = :code")
+    @Query(Queries.DiscountCode.BY_CODE)
     Optional<DiscountCode> findByCodeForUpdate(@Param("code") String code);
 }

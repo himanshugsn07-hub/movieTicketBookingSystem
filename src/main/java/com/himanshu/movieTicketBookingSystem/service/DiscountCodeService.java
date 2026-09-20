@@ -6,7 +6,6 @@ import com.himanshu.movieTicketBookingSystem.exception.ConflictException;
 import com.himanshu.movieTicketBookingSystem.exception.NotFoundException;
 import com.himanshu.movieTicketBookingSystem.exception.ValidationException;
 import com.himanshu.movieTicketBookingSystem.repository.DiscountCodeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,8 +17,11 @@ import java.util.List;
 @Transactional
 public class DiscountCodeService {
 
-    @Autowired
-    private DiscountCodeRepository discountRepo;
+    private final DiscountCodeRepository discountRepo;
+
+    public DiscountCodeService(DiscountCodeRepository discountRepo) {
+        this.discountRepo = discountRepo;
+    }
 
     // Creates a discount code; the text is stored upper-case and must be unused.
     public DiscountCode create(String code, DiscountType type, BigDecimal value, LocalDateTime validFrom,
@@ -65,7 +67,7 @@ public class DiscountCodeService {
     }
 
     private DiscountCode find(int id) {
-        return discountRepo.findById(id).orElseThrow(() -> new NotFoundException("Discount code " + id + " not found"));
+        return discountRepo.findById(id).orElseThrow(() -> NotFoundException.of("Discount code", id));
     }
 
     private String normalize(String code) {

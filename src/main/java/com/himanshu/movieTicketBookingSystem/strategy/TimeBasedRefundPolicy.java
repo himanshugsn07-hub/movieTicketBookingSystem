@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.strategy;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.entity.RefundTier;
 import org.springframework.stereotype.Component;
@@ -13,13 +14,10 @@ import java.util.Comparator;
 @Component
 public class TimeBasedRefundPolicy implements RefundPolicy {
 
-    // Used for bookings created before refund policies were configurable: full refund 24h or more ahead.
-    private static final String LEGACY_TIERS = "24:100,0:0";
-
     // Applies the booking's snapshotted refund tiers to the amount paid, based on the notice given before the show.
     @Override
     public BigDecimal calculateRefund(Booking booking, LocalDateTime now) {
-        String snapshot = booking.getRefundTiers() != null ? booking.getRefundTiers() : LEGACY_TIERS;
+        String snapshot = booking.getRefundTiers() != null ? booking.getRefundTiers() : Constants.Refunds.LEGACY_TIERS;
         long minutesBeforeShow = Duration.between(now, booking.getShow().getStartTime()).toMinutes();
         int percent = RefundTier.parseAll(snapshot).stream()
                 .filter(t -> t.hoursBeforeShow() * 60L <= minutesBeforeShow)

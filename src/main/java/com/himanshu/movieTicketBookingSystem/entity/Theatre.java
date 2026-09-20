@@ -1,7 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.entity;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 public class Theatre {
@@ -13,9 +12,6 @@ public class Theatre {
 
     @ManyToOne
     private City city;
-
-    @OneToMany(mappedBy = "theatre")
-    private List<Screen> screens;
 
     protected Theatre() {
     }

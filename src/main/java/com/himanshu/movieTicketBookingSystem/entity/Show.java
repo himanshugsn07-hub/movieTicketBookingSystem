@@ -2,9 +2,10 @@ package com.himanshu.movieTicketBookingSystem.entity;
 
 import com.himanshu.movieTicketBookingSystem.enums.PricingTier;
 import jakarta.persistence.*;
-import java.util.ArrayList;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -50,19 +51,14 @@ public class Show {
         return startTime;
     }
 
-    // Returns true if the show's start time has passed.
-    public boolean hasStarted() {
-        return !LocalDateTime.now().isBefore(startTime);
+    // Returns true if the show's start time has been reached at the given time.
+    public boolean hasStarted(LocalDateTime now) {
+        return !now.isBefore(startTime);
     }
 
     // Returns true if the show has been cancelled.
     public boolean isCancelled() {
         return cancelled;
-    }
-
-    // Returns the seats of this show whose status is AVAILABLE.
-    public List<Seat> getAvailableSeats() {
-        return seats.stream().filter(Seat::isAvailable).toList();
     }
 
     protected Show() {

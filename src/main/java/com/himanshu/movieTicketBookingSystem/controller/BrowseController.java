@@ -1,12 +1,13 @@
 package com.himanshu.movieTicketBookingSystem.controller;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.CityResponse;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.TheatreResponse;
+import com.himanshu.movieTicketBookingSystem.dto.BookingDtos.MovieResponse;
 import com.himanshu.movieTicketBookingSystem.dto.BookingDtos.SeatResponse;
 import com.himanshu.movieTicketBookingSystem.dto.BrowseDtos.ShowSummary;
 import com.himanshu.movieTicketBookingSystem.entity.Show;
 import com.himanshu.movieTicketBookingSystem.service.BrowseService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,11 +15,20 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping(Constants.Api.ROOT)
 public class BrowseController {
 
-    @Autowired
-    private BrowseService browseService;
+    private final BrowseService browseService;
+
+    public BrowseController(BrowseService browseService) {
+        this.browseService = browseService;
+    }
+
+    // Searches movies by title in a city.
+    @GetMapping("/movies")
+    public List<MovieResponse> searchMovies(@RequestParam String title, @RequestParam int cityId) {
+        return browseService.searchMovies(title, cityId).stream().map(MovieResponse::from).toList();
+    }
 
     // Lists all cities.
     @GetMapping("/cities")
@@ -38,8 +48,8 @@ public class BrowseController {
                                    @RequestParam(required = false) Integer theatreId,
                                    @RequestParam(required = false) String movieId,
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                   @RequestParam(defaultValue = "0") int page,
-                                   @RequestParam(defaultValue = "20") int size) {
+                                   @RequestParam(defaultValue = Constants.Paging.DEFAULT_PAGE) int page,
+                                   @RequestParam(defaultValue = Constants.Paging.DEFAULT_SIZE) int size) {
         return browseService.searchShows(cityId, theatreId, movieId, date, page, size).stream()
                 .map(s -> ShowSummary.from(s, browseService.countAvailableSeats(s.getId())))
                 .toList();
@@ -50,6 +60,12 @@ public class BrowseController {
     public ShowSummary show(@PathVariable int showId) {
         Show show = browseService.getShow(showId);
         return ShowSummary.from(show, browseService.countAvailableSeats(showId));
+    }
+
+    // Lists the available seats of a show.
+    @GetMapping("/shows/{showId}/seats/available")
+    public List<SeatResponse> availableSeats(@PathVariable int showId) {
+        return browseService.getAvailableSeats(showId).stream().map(SeatResponse::from).toList();
     }
 
     // Returns the full seat map of a show with each seat's status.

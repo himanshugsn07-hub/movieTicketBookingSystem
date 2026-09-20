@@ -1,8 +1,9 @@
 package com.himanshu.movieTicketBookingSystem.entity;
 
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
-import jakarta.persistence.*;
 import com.himanshu.movieTicketBookingSystem.exception.InvalidStateException;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;

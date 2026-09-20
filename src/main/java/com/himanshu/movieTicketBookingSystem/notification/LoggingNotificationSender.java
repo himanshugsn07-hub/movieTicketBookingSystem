@@ -12,8 +12,11 @@ public class LoggingNotificationSender implements NotificationSender {
     private static final Logger log = LoggerFactory.getLogger(LoggingNotificationSender.class);
 
     // Optional artificial delay to simulate a slow email/SMS provider.
-    @Value("${app.notification.simulated-delay-ms:0}")
-    private long simulatedDelayMs;
+    private final long simulatedDelayMs;
+
+    public LoggingNotificationSender(@Value("${app.notification.simulated-delay-ms:0}") long simulatedDelayMs) {
+        this.simulatedDelayMs = simulatedDelayMs;
+    }
 
     // Simulates delivery by logging the message after the optional delay.
     @Override

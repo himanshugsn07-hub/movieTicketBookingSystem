@@ -3,15 +3,13 @@ package com.himanshu.movieTicketBookingSystem.entity;
 import com.himanshu.movieTicketBookingSystem.enums.PaymentStatus;
 import com.himanshu.movieTicketBookingSystem.enums.PaymentType;
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
 @Entity
 public class Payment {
     @Id
     private String id;
-
-    @OneToOne(mappedBy = "payment")
-    private Booking booking;
 
     @Enumerated(EnumType.STRING)
     private PaymentType paymentType;
@@ -24,9 +22,8 @@ public class Payment {
     protected Payment() {
     }
 
-    public Payment(String id, Booking booking, PaymentType paymentType, BigDecimal amount, PaymentStatus status) {
+    public Payment(String id, PaymentType paymentType, BigDecimal amount, PaymentStatus status) {
         this.id = id;
-        this.booking = booking;
         this.paymentType = paymentType;
         this.amount = amount;
         this.status = status;

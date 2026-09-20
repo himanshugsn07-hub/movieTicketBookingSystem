@@ -1,22 +1,25 @@
 package com.himanshu.movieTicketBookingSystem.controller;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.RefundPolicyRequest;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.RefundPolicyResponse;
 import com.himanshu.movieTicketBookingSystem.entity.RefundTier;
 import com.himanshu.movieTicketBookingSystem.service.RefundPolicyService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/refund-policies")
+@RequestMapping(Constants.Api.ADMIN + "/refund-policies")
 public class AdminRefundPolicyController {
 
-    @Autowired
-    private RefundPolicyService policyService;
+    private final RefundPolicyService policyService;
+
+    public AdminRefundPolicyController(RefundPolicyService policyService) {
+        this.policyService = policyService;
+    }
 
     // Creates a refund policy.
     @PostMapping

@@ -1,21 +1,24 @@
 package com.himanshu.movieTicketBookingSystem.controller;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.DiscountCodeRequest;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.DiscountCodeResponse;
 import com.himanshu.movieTicketBookingSystem.service.DiscountCodeService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/discount-codes")
+@RequestMapping(Constants.Api.ADMIN + "/discount-codes")
 public class AdminDiscountController {
 
-    @Autowired
-    private DiscountCodeService discountService;
+    private final DiscountCodeService discountService;
+
+    public AdminDiscountController(DiscountCodeService discountService) {
+        this.discountService = discountService;
+    }
 
     // Creates a discount code.
     @PostMapping

@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.repository;
 
+import com.himanshu.movieTicketBookingSystem.constants.Queries;
 import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import jakarta.persistence.LockModeType;
@@ -18,16 +19,12 @@ import java.util.Optional;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, String> {
 
-    // Finds bookings with status CREATED and expiresAt before the given time.
-    @Query("select b from Booking b where b.bookingStatus = com.himanshu.movieTicketBookingSystem.enums.BookingStatus.CREATED and b.expiresAt < :now order by b.expiresAt, b.confirmationId")
-    List<Booking> findExpiredBookings(@Param("now") LocalDateTime now);
-
     // Finds ids of CREATED bookings whose hold ended before the given time, oldest first (ids only, no seats loaded).
-    @Query("select b.confirmationId from Booking b where b.bookingStatus = com.himanshu.movieTicketBookingSystem.enums.BookingStatus.CREATED and b.expiresAt < :now order by b.expiresAt, b.confirmationId")
+    @Query(Queries.Booking.EXPIRED_IDS)
     List<String> findExpiredBookingIds(@Param("now") LocalDateTime now);
 
     // Same as findExpiredBookingIds but only for one show.
-    @Query("select b.confirmationId from Booking b where b.bookingStatus = com.himanshu.movieTicketBookingSystem.enums.BookingStatus.CREATED and b.expiresAt < :now and b.show.id = :showId order by b.expiresAt, b.confirmationId")
+    @Query(Queries.Booking.EXPIRED_IDS_BY_SHOW)
     List<String> findExpiredBookingIdsByShowId(@Param("now") LocalDateTime now, @Param("showId") int showId);
 
     // Finds the user's bookings, newest first.
@@ -37,11 +34,11 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     List<Booking> findByUserIdAndBookingStatusOrderByCreatedAtDesc(int userId, BookingStatus status, Pageable pageable);
 
     // Finds the ids of the show's bookings that have one of the given statuses, in id order.
-    @Query("select b.confirmationId from Booking b where b.show.id = :showId and b.bookingStatus in :statuses order by b.confirmationId")
+    @Query(Queries.Booking.IDS_BY_SHOW_AND_STATUSES)
     List<String> findIdsByShowIdAndStatuses(@Param("showId") int showId, @Param("statuses") Collection<BookingStatus> statuses);
 
     // Finds a booking by id under a pessimistic write lock so concurrent changes are serialized.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select b from Booking b where b.confirmationId = :confirmationId")
+    @Query(Queries.Booking.BY_ID)
     Optional<Booking> findByIdForUpdate(@Param("confirmationId") String confirmationId);
 }

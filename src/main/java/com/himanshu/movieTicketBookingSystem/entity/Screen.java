@@ -1,7 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.entity;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 public class Screen {
@@ -16,9 +15,6 @@ public class Screen {
 
     private int rows;
     private int columns;
-
-    @OneToMany(mappedBy = "screen")
-    private List<Show> shows;
 
     protected Screen() {
     }

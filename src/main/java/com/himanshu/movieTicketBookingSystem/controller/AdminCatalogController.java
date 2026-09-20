@@ -1,21 +1,24 @@
 package com.himanshu.movieTicketBookingSystem.controller;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.dto.AdminDtos.*;
 import com.himanshu.movieTicketBookingSystem.dto.BookingDtos.MovieResponse;
 import com.himanshu.movieTicketBookingSystem.service.AdminCatalogService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping(Constants.Api.ADMIN)
 public class AdminCatalogController {
 
-    @Autowired
-    private AdminCatalogService catalog;
+    private final AdminCatalogService catalog;
+
+    public AdminCatalogController(AdminCatalogService catalog) {
+        this.catalog = catalog;
+    }
 
     // Creates a city.
     @PostMapping("/cities")

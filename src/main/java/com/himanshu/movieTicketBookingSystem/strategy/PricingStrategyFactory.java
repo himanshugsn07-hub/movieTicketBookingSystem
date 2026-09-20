@@ -1,20 +1,20 @@
 package com.himanshu.movieTicketBookingSystem.strategy;
 
 import com.himanshu.movieTicketBookingSystem.enums.PricingTier;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PricingStrategyFactory {
 
-    @Autowired
-    private RegularPricing regularPricing;
+    private final RegularPricing regularPricing;
+    private final PremiumPricing premiumPricing;
+    private final WeekendPricing weekendPricing;
 
-    @Autowired
-    private PremiumPricing premiumPricing;
-
-    @Autowired
-    private WeekendPricing weekendPricing;
+    public PricingStrategyFactory(RegularPricing regularPricing, PremiumPricing premiumPricing, WeekendPricing weekendPricing) {
+        this.regularPricing = regularPricing;
+        this.premiumPricing = premiumPricing;
+        this.weekendPricing = weekendPricing;
+    }
 
     // Returns the pricing strategy for the given tier.
     public PricingStrategy forTier(PricingTier pricingTier) {

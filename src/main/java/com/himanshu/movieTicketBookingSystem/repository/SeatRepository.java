@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.repository;
 
+import com.himanshu.movieTicketBookingSystem.constants.Queries;
 import com.himanshu.movieTicketBookingSystem.entity.Seat;
 import com.himanshu.movieTicketBookingSystem.enums.SeatStatus;
 import jakarta.persistence.LockModeType;
@@ -16,7 +17,7 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
 
     // Finds the show's seats with the given ids, ordered by id, under a pessimistic write lock.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select s from Seat s where s.show.id = :showId and s.id in :seatIds order by s.id")
+    @Query(Queries.Seat.BY_SHOW_AND_IDS)
     List<Seat> findByShowIdAndIdIn(@Param("showId") int showId, @Param("seatIds") List<Integer> seatIds);
 
     // Finds all seats of the show ordered by id.

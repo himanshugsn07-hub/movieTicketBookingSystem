@@ -11,9 +11,9 @@ import java.util.UUID;
 @Component
 public class CardPayment implements PaymentStrategy {
 
-    // Charges the booking amount via card and returns the payment.
+    // Records a CARD payment of the booking's payable amount as successful.
     @Override
     public Payment pay(Booking booking) {
-        return new Payment(UUID.randomUUID().toString(), booking, PaymentType.CARD, booking.getPayableAmount(), PaymentStatus.SUCCESS);
+        return new Payment(UUID.randomUUID().toString(), PaymentType.CARD, booking.getPayableAmount(), PaymentStatus.SUCCESS);
     }
 }

@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.dto;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.entity.City;
 import com.himanshu.movieTicketBookingSystem.entity.DiscountCode;
 import com.himanshu.movieTicketBookingSystem.entity.RefundPolicyConfig;
@@ -11,11 +12,10 @@ import com.himanshu.movieTicketBookingSystem.enums.DiscountType;
 import com.himanshu.movieTicketBookingSystem.enums.PricingTier;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -85,7 +85,7 @@ public final class AdminDtos {
     }
 
     public record ScreenRequest(@NotBlank String name, @NotNull Integer theatreId,
-                                @NotNull @Min(1) @Max(26) Integer rows, @NotNull @Min(1) @Max(50) Integer columns) {
+                                @NotNull @Min(1) @Max(Constants.Layout.MAX_ROWS) Integer rows, @NotNull @Min(1) @Max(Constants.Layout.MAX_COLUMNS) Integer columns) {
     }
 
     public record ScreenResponse(int id, String name, int theatreId, int rows, int columns) {
@@ -100,7 +100,7 @@ public final class AdminDtos {
 
     public record ShowRequest(@NotNull Integer screenId, @NotBlank String movieId,
                               @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal basePrice,
-                              @NotNull PricingTier pricingTier, @NotNull @Future LocalDateTime startTime) {
+                              @NotNull PricingTier pricingTier, @NotNull LocalDateTime startTime) {
     }
 
     public record PricingRequest(@NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal basePrice,

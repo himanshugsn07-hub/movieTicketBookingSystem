@@ -1,17 +1,18 @@
 package com.himanshu.movieTicketBookingSystem.strategy;
 
 import com.himanshu.movieTicketBookingSystem.enums.PaymentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentStrategyFactory {
 
-    @Autowired
-    private CardPayment cardPayment;
+    private final CardPayment cardPayment;
+    private final UpiPayment upiPayment;
 
-    @Autowired
-    private UpiPayment upiPayment;
+    public PaymentStrategyFactory(CardPayment cardPayment, UpiPayment upiPayment) {
+        this.cardPayment = cardPayment;
+        this.upiPayment = upiPayment;
+    }
 
     // Returns the payment strategy for the given payment type.
     public PaymentStrategy forPayment(PaymentType paymentType) {

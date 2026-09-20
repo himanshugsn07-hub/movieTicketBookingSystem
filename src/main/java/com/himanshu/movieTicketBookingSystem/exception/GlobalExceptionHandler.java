@@ -1,20 +1,25 @@
 package com.himanshu.movieTicketBookingSystem.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final Clock clock;
+
+    public GlobalExceptionHandler(Clock clock) {
+        this.clock = clock;
+    }
 
     public record ErrorResponse(int status, String error, String message, LocalDateTime timestamp) {
     }
@@ -64,16 +69,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
-    // Maps invalid query or path parameters, such as page size out of range, to 400.
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ErrorResponse> invalidParams(HandlerMethodValidationException e) {
-        String message = e.getParameterValidationResults().stream()
-                .flatMap(r -> r.getResolvableErrors().stream())
-                .map(MessageSourceResolvable::getDefaultMessage)
-                .collect(Collectors.joining("; "));
-        return build(HttpStatus.BAD_REQUEST, message);
-    }
-
     // Maps unreadable or malformed JSON to 400.
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> unreadable(HttpMessageNotReadableException e) {
@@ -88,6 +83,6 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message) {
         return ResponseEntity.status(status)
-                .body(new ErrorResponse(status.value(), status.getReasonPhrase(), message, LocalDateTime.now()));
+                .body(new ErrorResponse(status.value(), status.getReasonPhrase(), message, LocalDateTime.now(clock)));
     }
 }

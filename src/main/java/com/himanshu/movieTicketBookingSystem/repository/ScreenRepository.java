@@ -1,5 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.repository;
 
+import com.himanshu.movieTicketBookingSystem.constants.Queries;
 import com.himanshu.movieTicketBookingSystem.entity.Screen;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,6 @@ public interface ScreenRepository extends JpaRepository<Screen, Integer> {
 
     // Finds a screen under a write lock so show scheduling on it is serialized.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select s from Screen s where s.id = :id")
+    @Query(Queries.Screen.BY_ID)
     Optional<Screen> findByIdForUpdate(@Param("id") int id);
 }

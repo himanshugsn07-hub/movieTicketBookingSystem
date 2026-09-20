@@ -1,17 +1,16 @@
 package com.himanshu.movieTicketBookingSystem.service;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.entity.Seat;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
-import com.himanshu.movieTicketBookingSystem.repository.SeatRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,32 +19,32 @@ public class BookingExpiryService {
 
     private static final Logger log = LoggerFactory.getLogger(BookingExpiryService.class);
 
-    @Autowired
-    private BookingRepository bookingRepo;
+    private final BookingRepository bookingRepo;
+    private final TransactionTemplate transactionTemplate;
+    private final Clock clock;
 
-    @Autowired
-    private SeatRepository seatRepo;
-
-    @Autowired
-    private PlatformTransactionManager txManager;
+    public BookingExpiryService(BookingRepository bookingRepo, TransactionTemplate transactionTemplate, Clock clock) {
+        this.bookingRepo = bookingRepo;
+        this.transactionTemplate = transactionTemplate;
+        this.clock = clock;
+    }
 
     // Expires CREATED bookings past their hold time and releases their seats; runs every 30 seconds.
-    @Scheduled(fixedDelay = 30_000)
+    @Scheduled(fixedDelay = Constants.Scheduling.EXPIRY_SWEEP_MS)
     public void releaseExpiredBookings() {
-        expireAll(bookingRepo.findExpiredBookingIds(LocalDateTime.now()));
+        expireAll(bookingRepo.findExpiredBookingIds(LocalDateTime.now(clock)));
     }
 
     // Same as the scheduled sweep but only for one show; run before a booking is created so lapsed holds free their seats at once.
     public void releaseExpiredBookings(int showId) {
-        expireAll(bookingRepo.findExpiredBookingIdsByShowId(LocalDateTime.now(), showId));
+        expireAll(bookingRepo.findExpiredBookingIdsByShowId(LocalDateTime.now(clock), showId));
     }
 
     // Expires each booking in its own transaction so one failure does not stop the others.
     private void expireAll(List<String> ids) {
-        TransactionTemplate tx = new TransactionTemplate(txManager);
         for (String id : ids) {
             try {
-                tx.executeWithoutResult(status -> expire(id));
+                transactionTemplate.executeWithoutResult(status -> expire(id));
             } catch (RuntimeException e) {
                 log.warn("Could not expire booking {}", id, e);
             }
@@ -56,12 +55,10 @@ public class BookingExpiryService {
     private void expire(String confirmationId) {
         bookingRepo.findByIdForUpdate(confirmationId)
                 .filter(b -> b.getBookingStatus() == BookingStatus.CREATED
-                        && b.getExpiresAt().isBefore(LocalDateTime.now()))
+                        && b.getExpiresAt().isBefore(LocalDateTime.now(clock)))
                 .ifPresent(b -> {
                     b.expire();
                     b.getSeats().forEach(Seat::release);
-                    seatRepo.saveAll(b.getSeats());
-                    bookingRepo.save(b);
                     log.info("Expired booking {} and released {} seat(s)", b.getConfirmationId(), b.getSeats().size());
                 });
     }

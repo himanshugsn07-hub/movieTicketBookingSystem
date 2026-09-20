@@ -2,11 +2,12 @@ package com.himanshu.movieTicketBookingSystem.service;
 
 import com.himanshu.movieTicketBookingSystem.entity.RefundPolicyConfig;
 import com.himanshu.movieTicketBookingSystem.entity.RefundTier;
+import com.himanshu.movieTicketBookingSystem.entity.Show;
 import com.himanshu.movieTicketBookingSystem.exception.ConflictException;
+import com.himanshu.movieTicketBookingSystem.exception.InvalidStateException;
 import com.himanshu.movieTicketBookingSystem.exception.NotFoundException;
 import com.himanshu.movieTicketBookingSystem.exception.ValidationException;
 import com.himanshu.movieTicketBookingSystem.repository.RefundPolicyConfigRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,8 +20,11 @@ import java.util.Set;
 @Transactional
 public class RefundPolicyService {
 
-    @Autowired
-    private RefundPolicyConfigRepository policyRepo;
+    private final RefundPolicyConfigRepository policyRepo;
+
+    public RefundPolicyService(RefundPolicyConfigRepository policyRepo) {
+        this.policyRepo = policyRepo;
+    }
 
     // Creates a policy with the given tiers; the name must be unused.
     public RefundPolicyConfig create(String name, List<RefundTier> tiers) {
@@ -73,8 +77,18 @@ public class RefundPolicyService {
         policyRepo.flush();
     }
 
+    // Returns the show's own refund policy, or the default one; throws InvalidStateException if none is configured.
+    @Transactional(readOnly = true)
+    public RefundPolicyConfig resolveFor(Show show) {
+        if (show.getRefundPolicy() != null) {
+            return show.getRefundPolicy();
+        }
+        return policyRepo.findByDefaultPolicyTrue()
+                .orElseThrow(() -> new InvalidStateException("No refund policy is configured"));
+    }
+
     private RefundPolicyConfig find(int id) {
-        return policyRepo.findById(id).orElseThrow(() -> new NotFoundException("Refund policy " + id + " not found"));
+        return policyRepo.findById(id).orElseThrow(() -> NotFoundException.of("Refund policy", id));
     }
 
     // Requires unique hours, a catch-all tier at 0 hours, and refunds that never rise as the show gets closer.

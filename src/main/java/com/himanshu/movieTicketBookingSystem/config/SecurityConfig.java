@@ -1,5 +1,7 @@
 package com.himanshu.movieTicketBookingSystem.config;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
+import com.himanshu.movieTicketBookingSystem.enums.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,9 +25,9 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(Constants.Api.ERROR).permitAll()
+                        .requestMatchers(HttpMethod.POST, Constants.Api.REGISTER).permitAll()
+                        .requestMatchers(Constants.Api.ADMIN + "/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated());
         return http.build();
     }

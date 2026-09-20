@@ -1,7 +1,6 @@
 package com.himanshu.movieTicketBookingSystem.entity;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 public class City {
@@ -10,9 +9,6 @@ public class City {
     private int id;
 
     private String name;
-
-    @OneToMany(mappedBy = "city")
-    private List<Theatre> theatres;
 
     protected City() {
     }

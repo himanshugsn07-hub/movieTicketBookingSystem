@@ -10,7 +10,6 @@ import com.himanshu.movieTicketBookingSystem.repository.CityRepository;
 import com.himanshu.movieTicketBookingSystem.repository.MovieRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ScreenRepository;
 import com.himanshu.movieTicketBookingSystem.repository.TheatreRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,17 +20,17 @@ import java.util.UUID;
 @Transactional
 public class AdminCatalogService {
 
-    @Autowired
-    private CityRepository cityRepo;
+    private final CityRepository cityRepo;
+    private final TheatreRepository theatreRepo;
+    private final ScreenRepository screenRepo;
+    private final MovieRepository movieRepo;
 
-    @Autowired
-    private TheatreRepository theatreRepo;
-
-    @Autowired
-    private ScreenRepository screenRepo;
-
-    @Autowired
-    private MovieRepository movieRepo;
+    public AdminCatalogService(CityRepository cityRepo, TheatreRepository theatreRepo, ScreenRepository screenRepo, MovieRepository movieRepo) {
+        this.cityRepo = cityRepo;
+        this.theatreRepo = theatreRepo;
+        this.screenRepo = screenRepo;
+        this.movieRepo = movieRepo;
+    }
 
     // Creates a city.
     public City createCity(String name) {
@@ -122,27 +121,27 @@ public class AdminCatalogService {
 
     // Updates a movie's details.
     public Movie updateMovie(String id, String title, String language, int durationMin, String genre) {
-        Movie movie = movieRepo.findById(id).orElseThrow(() -> new NotFoundException("Movie " + id + " not found"));
+        Movie movie = movieRepo.findById(id).orElseThrow(() -> NotFoundException.of("Movie", id));
         movie.update(title.trim(), language.trim(), durationMin, genre.trim());
         return movie;
     }
 
     // Deletes a movie; fails with a conflict if it still has shows.
     public void deleteMovie(String id) {
-        Movie movie = movieRepo.findById(id).orElseThrow(() -> new NotFoundException("Movie " + id + " not found"));
+        Movie movie = movieRepo.findById(id).orElseThrow(() -> NotFoundException.of("Movie", id));
         movieRepo.delete(movie);
         movieRepo.flush();
     }
 
     private City findCity(int id) {
-        return cityRepo.findById(id).orElseThrow(() -> new NotFoundException("City " + id + " not found"));
+        return cityRepo.findById(id).orElseThrow(() -> NotFoundException.of("City", id));
     }
 
     private Theatre findTheatre(int id) {
-        return theatreRepo.findById(id).orElseThrow(() -> new NotFoundException("Theatre " + id + " not found"));
+        return theatreRepo.findById(id).orElseThrow(() -> NotFoundException.of("Theatre", id));
     }
 
     private Screen findScreen(int id) {
-        return screenRepo.findById(id).orElseThrow(() -> new NotFoundException("Screen " + id + " not found"));
+        return screenRepo.findById(id).orElseThrow(() -> NotFoundException.of("Screen", id));
     }
 }
