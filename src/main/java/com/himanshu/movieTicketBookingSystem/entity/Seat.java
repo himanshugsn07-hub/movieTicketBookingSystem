@@ -9,6 +9,10 @@ public class Seat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @ManyToOne
+    @JoinColumn(name = "show_id")
+    private Show show;
+
     @Enumerated(EnumType.STRING)
     private SeatStatus status;
 

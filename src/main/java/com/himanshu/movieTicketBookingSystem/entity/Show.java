@@ -18,8 +18,7 @@ public class Show {
     @ManyToOne
     private Movie movie;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "show_id")
+    @OneToMany(mappedBy = "show", cascade = CascadeType.ALL)
     private List<Seat> seats;
 
     private BigDecimal basePrice;
