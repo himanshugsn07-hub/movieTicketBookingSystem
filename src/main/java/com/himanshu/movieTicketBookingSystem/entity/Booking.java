@@ -32,6 +32,16 @@ public class Booking {
     @OneToOne(cascade = CascadeType.ALL)
     private Payment payment;
 
+    // Returns the booking amount.
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    // Returns the show this booking is for.
+    public Show getShow() {
+        return show;
+    }
+
     // Moves booking CREATED -> CONFIRMED and attaches the payment.
     public void confirm(Payment payment) {
         requireStatus(BookingStatus.CREATED);

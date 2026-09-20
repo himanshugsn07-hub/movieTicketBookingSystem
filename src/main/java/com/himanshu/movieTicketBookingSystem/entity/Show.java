@@ -30,6 +30,16 @@ public class Show {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
+    // Returns the base price of a single seat.
+    public BigDecimal getBasePrice() {
+        return basePrice;
+    }
+
+    // Returns the show's start time.
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
     // Returns true if the show's start time has passed.
     public boolean hasStarted() {
         return !LocalDateTime.now().isBefore(startTime);

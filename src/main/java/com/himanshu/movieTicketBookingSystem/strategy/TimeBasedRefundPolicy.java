@@ -12,9 +12,10 @@ public class TimeBasedRefundPolicy implements RefundPolicy {
 
     private Duration fullRefundWindow = Duration.ofHours(24);
 
-    // Returns the full amount if cancelled within the refund window, otherwise a reduced or zero refund.
+    // Returns the full amount if cancelled at least fullRefundWindow before the show, otherwise zero.
     @Override
     public BigDecimal calculateRefund(Booking booking, LocalDateTime now) {
-        throw new UnsupportedOperationException("TODO");
+        LocalDateTime cutoff = booking.getShow().getStartTime().minus(fullRefundWindow);
+        return now.isAfter(cutoff) ? BigDecimal.ZERO : booking.getAmount();
     }
 }

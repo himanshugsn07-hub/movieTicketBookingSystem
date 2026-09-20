@@ -13,6 +13,6 @@ public class RegularPricing implements PricingStrategy {
     // Returns basePrice x seat count.
     @Override
     public BigDecimal calculatePrice(Show show, List<Seat> seats) {
-        throw new UnsupportedOperationException("TODO");
+        return show.getBasePrice().multiply(BigDecimal.valueOf(seats.size()));
     }
 }

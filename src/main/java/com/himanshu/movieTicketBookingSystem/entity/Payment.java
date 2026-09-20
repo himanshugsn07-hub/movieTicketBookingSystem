@@ -21,6 +21,17 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
+    protected Payment() {
+    }
+
+    public Payment(String id, Booking booking, PaymentType paymentType, BigDecimal amount, PaymentStatus status) {
+        this.id = id;
+        this.booking = booking;
+        this.paymentType = paymentType;
+        this.amount = amount;
+        this.status = status;
+    }
+
     // Sets the payment status to REFUNDED.
     public void markRefunded() {
         status = PaymentStatus.REFUNDED;
