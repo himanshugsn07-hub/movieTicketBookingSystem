@@ -8,6 +8,9 @@ import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
 import com.himanshu.movieTicketBookingSystem.repository.MovieRepository;
 import com.himanshu.movieTicketBookingSystem.repository.SeatRepository;
 import com.himanshu.movieTicketBookingSystem.repository.ShowRepository;
+import com.himanshu.movieTicketBookingSystem.strategy.PaymentStrategyFactory;
+import com.himanshu.movieTicketBookingSystem.strategy.PricingStrategyFactory;
+import com.himanshu.movieTicketBookingSystem.strategy.RefundPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +34,14 @@ public class BookingService {
     @Autowired
     private SeatRepository seatRepo;
 
-    // TODO: paymentStrategyFactory, pricingStrategyFactory and refundPolicy are added in the strategies step.
+    @Autowired
+    private PaymentStrategyFactory paymentStrategyFactory;
+
+    @Autowired
+    private PricingStrategyFactory pricingStrategyFactory;
+
+    @Autowired
+    private RefundPolicy refundPolicy;
 
     // Searches movies by title that are showing in the given city.
     public List<Movie> searchMovies(String title, int cityId) {
