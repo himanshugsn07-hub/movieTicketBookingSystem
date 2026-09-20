@@ -40,11 +40,13 @@ public final class BookingDtos {
         }
     }
 
-    public record BookingResponse(String confirmationId, int showId, List<Integer> seatIds, BookingStatus status,
+    public record BookingResponse(String confirmationId, int showId, String movieTitle, LocalDateTime showStartTime,
+                                  List<Integer> seatIds, BookingStatus status,
                                   BigDecimal amount, BigDecimal refundAmount, LocalDateTime createdAt,
                                   LocalDateTime expiresAt, PaymentStatus paymentStatus) {
         public static BookingResponse from(Booking b) {
             return new BookingResponse(b.getConfirmationId(), b.getShow().getId(),
+                    b.getShow().getMovie().getTitle(), b.getShow().getStartTime(),
                     b.getSeats().stream().map(Seat::getId).toList(), b.getBookingStatus(), b.getAmount(),
                     b.getRefundAmount(), b.getCreatedAt(), b.getExpiresAt(),
                     b.getPayment() == null ? null : b.getPayment().getStatus());

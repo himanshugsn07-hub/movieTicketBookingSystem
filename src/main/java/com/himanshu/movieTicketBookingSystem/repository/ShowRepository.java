@@ -2,6 +2,7 @@ package com.himanshu.movieTicketBookingSystem.repository;
 
 import com.himanshu.movieTicketBookingSystem.entity.Show;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface ShowRepository extends JpaRepository<Show, Integer> {
+public interface ShowRepository extends JpaRepository<Show, Integer>, JpaSpecificationExecutor<Show> {
 
     // Finds all shows on the given screen.
     List<Show> findByScreenId(int screenId);

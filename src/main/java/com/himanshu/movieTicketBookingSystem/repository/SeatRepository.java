@@ -19,6 +19,12 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
     @Query("select s from Seat s where s.show.id = :showId and s.id in :seatIds order by s.id")
     List<Seat> findByShowIdAndIdIn(@Param("showId") int showId, @Param("seatIds") List<Integer> seatIds);
 
+    // Finds all seats of the show ordered by id.
+    List<Seat> findByShowIdOrderById(int showId);
+
+    // Counts the show's seats that have the given status.
+    long countByShowIdAndStatus(int showId, SeatStatus status);
+
     // Finds the show's seats that have the given status.
     List<Seat> findByShowIdAndStatus(int showId, SeatStatus status);
 }

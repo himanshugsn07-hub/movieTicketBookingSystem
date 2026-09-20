@@ -22,6 +22,8 @@ import com.himanshu.movieTicketBookingSystem.strategy.PaymentStrategyFactory;
 import com.himanshu.movieTicketBookingSystem.strategy.PricingStrategyFactory;
 import com.himanshu.movieTicketBookingSystem.strategy.RefundPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +58,26 @@ public class BookingService {
 
     @Autowired
     private RefundPolicy refundPolicy;
+
+    // Returns the user's bookings, newest first, optionally filtered by status.
+    @Transactional(readOnly = true)
+    public List<Booking> getBookingHistory(int userId, BookingStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return status == null
+                ? bookingRepo.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                : bookingRepo.findByUserIdAndBookingStatusOrderByCreatedAtDesc(userId, status, pageable);
+    }
+
+    // Returns one of the user's bookings, or throws NotFoundException or UnauthorizedException.
+    @Transactional(readOnly = true)
+    public Booking getBooking(int userId, String confirmationId) {
+        Booking booking = bookingRepo.findById(confirmationId)
+                .orElseThrow(() -> new NotFoundException("Booking " + confirmationId + " not found"));
+        if (booking.getUserId() != userId) {
+            throw new UnauthorizedException("Booking does not belong to user " + userId);
+        }
+        return booking;
+    }
 
     // Loads the show or throws NotFoundException.
     private Show findShow(int showId) {

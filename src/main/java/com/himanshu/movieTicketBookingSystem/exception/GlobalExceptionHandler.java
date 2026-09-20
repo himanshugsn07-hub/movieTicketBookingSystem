@@ -1,12 +1,14 @@
 package com.himanshu.movieTicketBookingSystem.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -58,6 +60,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> invalidBody(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(f -> f.getField() + " " + f.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return build(HttpStatus.BAD_REQUEST, message);
+    }
+
+    // Maps invalid query or path parameters, such as page size out of range, to 400.
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> invalidParams(HandlerMethodValidationException e) {
+        String message = e.getParameterValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(MessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining("; "));
         return build(HttpStatus.BAD_REQUEST, message);
     }
