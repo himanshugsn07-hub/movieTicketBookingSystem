@@ -47,6 +47,16 @@ public class Booking {
         this.bookingStatus = BookingStatus.CREATED;
     }
 
+    // Returns the booking's confirmation id.
+    public String getConfirmationId() {
+        return confirmationId;
+    }
+
+    // Returns the current booking status.
+    public BookingStatus getBookingStatus() {
+        return bookingStatus;
+    }
+
     // Returns the id of the user who owns this booking.
     public int getUserId() {
         return userId;

@@ -3,6 +3,7 @@ package com.himanshu.movieTicketBookingSystem.service;
 import com.himanshu.movieTicketBookingSystem.entity.Booking;
 import com.himanshu.movieTicketBookingSystem.entity.Payment;
 import com.himanshu.movieTicketBookingSystem.entity.Show;
+import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
 import com.himanshu.movieTicketBookingSystem.enums.PaymentStatus;
 import com.himanshu.movieTicketBookingSystem.enums.SeatStatus;
 import com.himanshu.movieTicketBookingSystem.exception.InvalidStateException;
@@ -62,9 +63,9 @@ public class BookingService {
                 .orElseThrow(() -> new NotFoundException("Show " + showId + " not found"));
     }
 
-    // Loads the booking and throws NotFoundException or UnauthorizedException if it is missing or not the user's.
+    // Loads the booking under a write lock and throws NotFoundException or UnauthorizedException if it is missing or not the user's.
     private Booking findOwnedBooking(int userId, String confirmationId) {
-        Booking booking = bookingRepo.findById(confirmationId)
+        Booking booking = bookingRepo.findByIdForUpdate(confirmationId)
                 .orElseThrow(() -> new NotFoundException("Booking " + confirmationId + " not found"));
         if (booking.getUserId() != userId) {
             throw new UnauthorizedException("Booking does not belong to user " + userId);
@@ -120,6 +121,9 @@ public class BookingService {
     @Transactional
     public Booking confirmBooking(int userId, String confirmationId, PaymentType paymentType) {
         Booking booking = findOwnedBooking(userId, confirmationId);
+        if (booking.getBookingStatus() != BookingStatus.CREATED) {
+            throw new InvalidStateException("Booking is " + booking.getBookingStatus() + ", not CREATED");
+        }
         if (LocalDateTime.now().isAfter(booking.getExpiresAt())) {
             throw new InvalidStateException("Booking hold has expired");
         }
