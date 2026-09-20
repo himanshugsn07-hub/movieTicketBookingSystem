@@ -15,6 +15,7 @@ import com.himanshu.movieTicketBookingSystem.support.TestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -28,6 +29,7 @@ import static com.himanshu.movieTicketBookingSystem.support.TestData.NOW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -40,12 +42,13 @@ class NotificationDispatcherTest {
     @Mock BookingRepository bookingRepo;
     @Mock NotificationSender sender;
 
+    private final PlatformTransactionManager txManager = mock(PlatformTransactionManager.class);
     private NotificationDispatcher dispatcher;
 
     @BeforeEach
     void setUp() {
         dispatcher = new NotificationDispatcher(notificationRepo, bookingRepo, sender,
-                new TransactionTemplate(mock(PlatformTransactionManager.class)), TestData.CLOCK);
+                new TransactionTemplate(txManager), TestData.CLOCK);
     }
 
     private Notification notification(NotificationType type, LocalDateTime sendAt) {
@@ -113,5 +116,33 @@ class NotificationDispatcherTest {
         deliver();
         assertThat(second.getStatus()).as("booking CONFIRMED").isEqualTo(NotificationStatus.SENT);
         verify(sender).send(second);
+    }
+
+    @Test
+    void theProviderIsCalledOutsideAnyTransaction() {
+        Notification n = notification(NotificationType.CONFIRMATION, NOW);
+
+        deliver();
+
+        // claim committed, then the send, then the outcome committed: no lock or connection is held while sending
+        InOrder order = inOrder(txManager, sender);
+        order.verify(txManager).commit(any());
+        order.verify(sender).send(n);
+        order.verify(txManager).commit(any());
+    }
+
+    @Test
+    void aClaimLeftByADeadWorkerIsTakenOverOnlyAfterTheLeaseExpires() {
+        Notification abandoned = notification(NotificationType.CONFIRMATION, NOW.minusHours(1));
+        abandoned.claim(NOW.minusMinutes(10));
+        deliver();
+        verify(sender).send(abandoned);
+        assertThat(abandoned.getStatus()).isEqualTo(NotificationStatus.SENT);
+
+        Notification inFlight = notification(NotificationType.CONFIRMATION, NOW.minusHours(1));
+        inFlight.claim(NOW.minusSeconds(30));
+        deliver();
+        verify(sender, never()).send(inFlight);
+        assertThat(inFlight.getStatus()).isEqualTo(NotificationStatus.SENDING);
     }
 }

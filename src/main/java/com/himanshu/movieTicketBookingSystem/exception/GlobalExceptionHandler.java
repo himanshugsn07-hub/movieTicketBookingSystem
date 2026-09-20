@@ -1,6 +1,11 @@
 package com.himanshu.movieTicketBookingSystem.exception;
 
+import com.himanshu.movieTicketBookingSystem.constants.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -14,6 +19,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private final Clock clock;
 
@@ -69,6 +76,15 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
+    // Maps lock timeouts and deadlock victims to 503 so the client retries.
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> busy(PessimisticLockingFailureException e) {
+        log.warn("Request failed to get a database lock: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header(HttpHeaders.RETRY_AFTER, "1")
+                .body(errorBody(HttpStatus.SERVICE_UNAVAILABLE, Constants.Messages.BUSY));
+    }
+
     // Maps unreadable or malformed JSON to 400.
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> unreadable(HttpMessageNotReadableException e) {
@@ -82,7 +98,10 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message) {
-        return ResponseEntity.status(status)
-                .body(new ErrorResponse(status.value(), status.getReasonPhrase(), message, LocalDateTime.now(clock)));
+        return ResponseEntity.status(status).body(errorBody(status, message));
+    }
+
+    private ErrorResponse errorBody(HttpStatus status, String message) {
+        return new ErrorResponse(status.value(), status.getReasonPhrase(), message, LocalDateTime.now(clock));
     }
 }

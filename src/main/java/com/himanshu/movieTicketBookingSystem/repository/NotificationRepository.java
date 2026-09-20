@@ -24,9 +24,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query(Queries.Notification.BY_ID)
     Optional<Notification> findByIdForUpdate(@Param("id") long id);
 
-    // Finds ids of PENDING notifications that are due, oldest first.
+    // Finds ids of notifications to send: PENDING ones that are due, and SENDING ones claimed before staleBefore, oldest first.
     @Query(Queries.Notification.DUE_IDS)
-    List<Long> findDueIds(@Param("now") LocalDateTime now, Pageable pageable);
+    List<Long> findDueIds(@Param("now") LocalDateTime now, @Param("staleBefore") LocalDateTime staleBefore,
+                          Pageable pageable);
 
     // Withdraws the booking's reminders that have not been sent yet.
     @Modifying

@@ -1,5 +1,5 @@
 package com.himanshu.movieTicketBookingSystem.enums;
 
 public enum NotificationStatus {
-    PENDING, SENT, FAILED, CANCELLED
+    PENDING, SENDING, SENT, FAILED, CANCELLED
 }

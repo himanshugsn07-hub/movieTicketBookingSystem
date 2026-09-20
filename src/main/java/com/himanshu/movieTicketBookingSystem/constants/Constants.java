@@ -78,6 +78,8 @@ public final class Constants {
         public static final int QUEUE_CAPACITY = 500;
         public static final int MAX_DELIVERY_ATTEMPTS = 3;
         public static final int DUE_BATCH_SIZE = 50;
+        /** How long a worker may hold a claimed notification before another worker may take it over. */
+        public static final Duration CLAIM_LEASE = Duration.ofMinutes(2);
 
         private Notifications() {
         }
@@ -106,6 +108,7 @@ public final class Constants {
     public static final class Messages {
         public static final String NOT_BOOKING_OWNER = "Booking does not belong to the current user";
         public static final String SHOW_STARTED = "Show has already started";
+        public static final String BUSY = "Another request is changing the same data. Please retry in a moment.";
         public static final String INVALID_PAGING = "page must be >= 0 and size between 1 and " + Paging.MAX_SIZE;
 
         private Messages() {

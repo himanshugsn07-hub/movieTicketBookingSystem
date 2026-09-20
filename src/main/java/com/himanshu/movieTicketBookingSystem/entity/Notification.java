@@ -31,6 +31,9 @@ public class Notification {
     private LocalDateTime sendAt;
     private LocalDateTime sentAt;
 
+    // when a worker took the notification to send it; used to recover from a worker that died mid-send
+    private LocalDateTime claimedAt;
+
     protected Notification() {
     }
 
@@ -101,12 +104,22 @@ public class Notification {
         this.sentAt = when;
     }
 
-    // Counts a failed attempt and gives up (FAILED) once maxAttempts is reached.
+    // Returns true if a worker may send it now: PENDING and due, or SENDING but claimed before staleBefore (worker gone).
+    public boolean isClaimable(LocalDateTime now, LocalDateTime staleBefore) {
+        return (status == NotificationStatus.PENDING && !sendAt.isAfter(now))
+                || (status == NotificationStatus.SENDING && claimedAt.isBefore(staleBefore));
+    }
+
+    // Marks the notification as being sent by a worker.
+    public void claim(LocalDateTime now) {
+        this.status = NotificationStatus.SENDING;
+        this.claimedAt = now;
+    }
+
+    // Counts a failed attempt; goes back to PENDING for a retry, or to FAILED once maxAttempts is reached.
     public void recordFailure(int maxAttempts) {
         this.attempts++;
-        if (attempts >= maxAttempts) {
-            this.status = NotificationStatus.FAILED;
-        }
+        this.status = attempts >= maxAttempts ? NotificationStatus.FAILED : NotificationStatus.PENDING;
     }
 
     // Withdraws a notification that has not been sent.

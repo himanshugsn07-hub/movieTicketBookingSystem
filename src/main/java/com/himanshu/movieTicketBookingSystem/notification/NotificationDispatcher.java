@@ -3,7 +3,6 @@ package com.himanshu.movieTicketBookingSystem.notification;
 import com.himanshu.movieTicketBookingSystem.constants.Constants;
 import com.himanshu.movieTicketBookingSystem.entity.Notification;
 import com.himanshu.movieTicketBookingSystem.enums.BookingStatus;
-import com.himanshu.movieTicketBookingSystem.enums.NotificationStatus;
 import com.himanshu.movieTicketBookingSystem.enums.NotificationType;
 import com.himanshu.movieTicketBookingSystem.repository.BookingRepository;
 import com.himanshu.movieTicketBookingSystem.repository.NotificationRepository;
@@ -48,10 +47,12 @@ public class NotificationDispatcher {
         deliver(event.notificationId());
     }
 
-    // Every 15 seconds delivers due notifications: scheduled reminders and any retries that are still pending.
+    // Every 15 seconds delivers due notifications: scheduled reminders, pending retries, and claims whose worker died.
     @Scheduled(fixedDelay = Constants.Scheduling.NOTIFICATION_SWEEP_MS)
     public void deliverDue() {
-        for (Long id : notificationRepo.findDueIds(LocalDateTime.now(clock), PageRequest.of(0, Constants.Notifications.DUE_BATCH_SIZE))) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime staleBefore = now.minus(Constants.Notifications.CLAIM_LEASE);
+        for (Long id : notificationRepo.findDueIds(now, staleBefore, PageRequest.of(0, Constants.Notifications.DUE_BATCH_SIZE))) {
             try {
                 deliver(id);
             } catch (RuntimeException e) {
@@ -60,23 +61,48 @@ public class NotificationDispatcher {
         }
     }
 
-    // Locks the notification, skips it if already handled or not yet due, drops stale reminders, then sends it.
+    // Claims the notification in a short transaction, sends it with no transaction open (so no row lock or database
+    // connection is held while the provider is called), then records the outcome in a second short transaction.
     private void deliver(long id) {
-        transactionTemplate.executeWithoutResult(status -> {
-            Notification n = notificationRepo.findByIdForUpdate(id).orElse(null);
-            if (n == null || n.getStatus() != NotificationStatus.PENDING || n.getSendAt().isAfter(LocalDateTime.now(clock))) {
-                return;
-            }
-            if (n.getType() == NotificationType.REMINDER && !bookingStillActive(n.getBookingId())) {
-                n.cancel();
-                return;
-            }
-            try {
-                sender.send(n);
+        Notification claimed = transactionTemplate.execute(status -> claim(id));
+        if (claimed == null) {
+            return;
+        }
+        boolean sent = send(claimed);
+        transactionTemplate.executeWithoutResult(status -> recordOutcome(id, sent));
+    }
+
+    // Locks the notification and takes it for sending, unless it is already handled, not due, or a reminder that went stale.
+    private Notification claim(long id) {
+        Notification n = notificationRepo.findByIdForUpdate(id).orElse(null);
+        LocalDateTime now = LocalDateTime.now(clock);
+        if (n == null || !n.isClaimable(now, now.minus(Constants.Notifications.CLAIM_LEASE))) {
+            return null;
+        }
+        if (n.getType() == NotificationType.REMINDER && !bookingStillActive(n.getBookingId())) {
+            n.cancel();
+            return null;
+        }
+        n.claim(now);
+        return n;
+    }
+
+    private boolean send(Notification n) {
+        try {
+            sender.send(n);
+            return true;
+        } catch (RuntimeException e) {
+            log.warn("Sending notification {} failed", n.getId(), e);
+            return false;
+        }
+    }
+
+    private void recordOutcome(long id, boolean sent) {
+        notificationRepo.findByIdForUpdate(id).ifPresent(n -> {
+            if (sent) {
                 n.markSent(LocalDateTime.now(clock));
-            } catch (RuntimeException e) {
+            } else {
                 n.recordFailure(Constants.Notifications.MAX_DELIVERY_ATTEMPTS);
-                log.warn("Sending notification {} failed (attempt {})", id, n.getAttempts(), e);
             }
         });
     }

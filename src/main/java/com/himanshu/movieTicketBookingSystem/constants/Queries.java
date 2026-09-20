@@ -9,6 +9,7 @@ public final class Queries {
     private static final String ENUMS = "com.himanshu.movieTicketBookingSystem.enums.";
     private static final String BOOKING_CREATED = ENUMS + "BookingStatus.CREATED";
     private static final String NOTIFICATION_PENDING = ENUMS + "NotificationStatus.PENDING";
+    private static final String NOTIFICATION_SENDING = ENUMS + "NotificationStatus.SENDING";
     private static final String NOTIFICATION_CANCELLED = ENUMS + "NotificationStatus.CANCELLED";
     private static final String NOTIFICATION_REMINDER = ENUMS + "NotificationType.REMINDER";
 
@@ -63,7 +64,8 @@ public final class Queries {
 
         public static final String DUE_IDS =
                 "select n.id from Notification n "
-                        + "where n.status = " + NOTIFICATION_PENDING + " and n.sendAt <= :now "
+                        + "where (n.status = " + NOTIFICATION_PENDING + " and n.sendAt <= :now) "
+                        + "or (n.status = " + NOTIFICATION_SENDING + " and n.claimedAt < :staleBefore) "
                         + "order by n.sendAt";
 
         public static final String CANCEL_PENDING_REMINDERS =
